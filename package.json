@@ -1,0 +1,33 @@
+{
+  "name": "a2a-x402-agent-template",
+  "version": "0.1.0",
+  "description": "AI agent template with x402 payments, ERC-8004 identity, and A2A protocol",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "register": "tsx scripts/register-identity.ts",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.0",
+    "@hono/node-server": "^1.14.0",
+    "@x402/hono": "^2.3.0",
+    "@x402/core": "^2.3.0",
+    "@x402/evm": "^2.3.0",
+    "@a2a-js/sdk": "^0.3.0",
+    "agent0-sdk": "^1.5.0",
+    "dotenv": "^16.4.0",
+    "uuid": "^11.0.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "vitest": "^3.0.0",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0"
+  }
+}
