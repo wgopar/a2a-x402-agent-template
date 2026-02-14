@@ -1,0 +1,23 @@
+# Copy to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+
+# ─── Required ──────────────────────────────────────────────────────
+wallet_address = ""   # Your Ethereum wallet (e.g. "0x1234...")
+private_key    = ""   # Private key for signing (e.g. "0xabcd...")
+
+# ─── Network ───────────────────────────────────────────────────────
+# Base Sepolia (testnet) — start here
+network = "eip155:84532"
+rpc_url = "https://sepolia.base.org"
+
+# Base Mainnet — uncomment when ready for production
+# network = "eip155:8453"
+# rpc_url = "https://mainnet.base.org"
+
+# ─── Optional ──────────────────────────────────────────────────────
+# aws_region        = "us-east-1"
+# function_name     = "a2a-agent"
+# memory_size       = 256
+# agent_name        = "Hello Agent"
+# agent_description = "A simple Hello World agent"
+# facilitator_url   = "https://x402.org/facilitator"

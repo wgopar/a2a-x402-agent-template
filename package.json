@@ -9,7 +9,9 @@
     "start": "node dist/server.js",
     "register": "tsx scripts/register-identity.ts",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "build:lambda": "docker build --target lambda -t a2a-agent:latest .",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "hono": "^4.7.0",
@@ -28,6 +30,7 @@
     "tsx": "^4.19.0",
     "vitest": "^3.0.0",
     "@types/node": "^22.0.0",
-    "@types/uuid": "^10.0.0"
+    "@types/uuid": "^10.0.0",
+    "esbuild": "^0.24.0"
   }
 }

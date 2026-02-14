@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { health } from "./routes/health.js";
 import { api } from "./routes/api.js";
 import { createPaymentMiddleware } from "./payments/x402.js";
@@ -11,15 +12,21 @@ import type { Config } from "./config.js";
 export function createApp(config: Config) {
   const app = new Hono();
 
-  // Free routes
+  app.use(
+    cors({
+      origin: "*",
+      allowMethods: ["GET", "POST", "OPTIONS"],
+      allowHeaders: ["Content-Type", "X-Payment", "X-Payment-Response"],
+      exposeHeaders: ["X-Payment-Response"],
+    }),
+  );
+
   app.route("/", health);
 
-  // A2A discovery + JSON-RPC (free)
   const agentCard = buildAgentCard(config, skills);
   const executor = new HelloExecutor();
   app.route("/", createA2ARoutes(agentCard, executor));
 
-  // x402 paywall on /api/*
   app.use(
     "/api/*",
     createPaymentMiddleware(config, [
