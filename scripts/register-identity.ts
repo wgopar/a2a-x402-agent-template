@@ -12,8 +12,11 @@ async function main() {
   const result = await registerAgent(config);
 
   console.log("\nRegistration complete!");
-  console.log(`  Agent ID: ${result.agentId}`);
-  console.log(`  TX Hash:  ${result.txHash}`);
+  console.log(`  Agent ID:  ${result.agentId}`);
+  console.log(`  TX Hash:   ${result.txHash}`);
+  if (result.agentURI) {
+    console.log(`  Agent URI: ${result.agentURI}`);
+  }
 }
 
 main().catch((err) => {

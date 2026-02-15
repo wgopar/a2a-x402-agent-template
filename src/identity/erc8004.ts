@@ -4,6 +4,7 @@ import type { Config } from "../config.js";
 export interface RegistrationResult {
   agentId: string;
   txHash: string;
+  agentURI?: string;
 }
 
 export type RegistryAddresses = Record<string, string>;
@@ -44,11 +45,15 @@ export async function registerAgent(
   // Flag x402 payment support
   agent.setX402Support(true);
 
-  // Publish to IPFS and register on-chain
+  // Publish to IPFS and register on-chain (step 1: mint token)
   const txHandle = await agent.registerIPFS();
+
+  // Wait for mint confirmation, upload metadata to IPFS, set on-chain URI (step 2)
+  const { result } = await txHandle.waitMined();
 
   return {
     agentId: agent.agentId ?? "pending",
     txHash: txHandle.hash,
+    agentURI: result?.agentURI,
   };
 }
