@@ -1,7 +1,16 @@
 node_modules/
 dist/
-.env
 *.tsbuildinfo
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Claude
+.claude/
 CLAUDE.md
 spec.md
 
