@@ -3,7 +3,7 @@ import { loadConfig } from "../src/config.js";
 import { registerAgent } from "../src/identity/erc8004.js";
 
 async function main() {
-  const config = loadConfig();
+  const config = await loadConfig();
 
   console.log(`Registering agent "${config.agentName}" on ${config.network}...`);
   console.log(`  A2A endpoint: ${config.agentUrl}`);

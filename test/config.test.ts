@@ -13,26 +13,26 @@ describe("loadConfig", () => {
     process.env = { ...original };
   });
 
-  it("loads required env vars", () => {
-    const config = loadConfig();
+  it("loads required env vars", async () => {
+    const config = await loadConfig();
     expect(config.walletAddress).toBe("0x1234567890abcdef");
     expect(config.privateKey).toBe("0xdeadbeef");
   });
 
-  it("applies defaults for optional vars", () => {
-    const config = loadConfig();
+  it("applies defaults for optional vars", async () => {
+    const config = await loadConfig();
     expect(config.network).toBe("eip155:84532");
     expect(config.port).toBe(3000);
     expect(config.agentName).toBe("Hello Agent");
   });
 
-  it("throws on missing WALLET_ADDRESS", () => {
+  it("throws on missing WALLET_ADDRESS", async () => {
     delete process.env.WALLET_ADDRESS;
-    expect(() => loadConfig()).toThrow("WALLET_ADDRESS");
+    await expect(loadConfig()).rejects.toThrow("WALLET_ADDRESS");
   });
 
-  it("throws on missing PRIVATE_KEY", () => {
+  it("throws on missing PRIVATE_KEY", async () => {
     delete process.env.PRIVATE_KEY;
-    expect(() => loadConfig()).toThrow("PRIVATE_KEY");
+    await expect(loadConfig()).rejects.toThrow("PRIVATE_KEY");
   });
 });

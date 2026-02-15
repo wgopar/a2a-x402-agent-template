@@ -3,7 +3,7 @@
 variable "aws_region" {
   description = "AWS region for all resources"
   type        = string
-  default     = "us-east-1"
+  default     = "us-west-2"
 }
 
 variable "function_name" {
@@ -55,7 +55,7 @@ variable "rpc_url" {
 variable "facilitator_url" {
   description = "x402 facilitator service URL for payment verification"
   type        = string
-  default     = "https://x402.org/facilitator"
+  default     = "https://www.x402.org/facilitator"
 }
 
 # ─── Agent Metadata ────────────────────────────────────────────────

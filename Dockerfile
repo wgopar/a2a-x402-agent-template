@@ -13,7 +13,8 @@ RUN npx esbuild src/lambda.ts \
       --platform=node \
       --target=node22 \
       --outfile=bundle/index.js \
-      --format=cjs
+      --format=cjs \
+      --external:@aws-sdk/*
 
 RUN npx tsc
 
