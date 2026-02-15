@@ -99,16 +99,23 @@ resource "aws_secretsmanager_secret_version" "private_key" {
 
 locals {
   # Maps 1:1 to src/config.ts. AGENT_URL is injected after Function URL creation.
-  env_vars = {
-    WALLET_ADDRESS        = var.wallet_address
-    PRIVATE_KEY_SECRET_ARN = aws_secretsmanager_secret.private_key.arn
-    NETWORK               = var.network
-    RPC_URL               = var.rpc_url
-    FACILITATOR_URL       = var.facilitator_url
-    AGENT_NAME            = var.agent_name
-    AGENT_DESCRIPTION     = var.agent_description
-    AGENT_URL             = "pending"
-  }
+  # Optional vars use merge to avoid passing empty strings (Lambda rejects them).
+  env_vars = merge(
+    {
+      WALLET_ADDRESS         = var.wallet_address
+      PRIVATE_KEY_SECRET_ARN = aws_secretsmanager_secret.private_key.arn
+      NETWORK                = var.network
+      RPC_URL                = var.rpc_url
+      FACILITATOR_URL        = var.facilitator_url
+      AGENT_NAME             = var.agent_name
+      AGENT_DESCRIPTION      = var.agent_description
+      AGENT_URL              = "pending"
+    },
+    var.agent_provider_name != "" ? { AGENT_PROVIDER_NAME = var.agent_provider_name } : {},
+    var.agent_provider_url  != "" ? { AGENT_PROVIDER_URL  = var.agent_provider_url }  : {},
+    var.agent_docs_url      != "" ? { AGENT_DOCS_URL      = var.agent_docs_url }      : {},
+    var.agent_icon_url      != "" ? { AGENT_ICON_URL      = var.agent_icon_url }      : {},
+  )
 }
 
 # ─── Function URL ──────────────────────────────────────────────────

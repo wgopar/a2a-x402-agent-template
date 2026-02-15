@@ -71,3 +71,27 @@ variable "agent_description" {
   type        = string
   default     = "A simple Hello World agent"
 }
+
+variable "agent_provider_name" {
+  description = "Organization name for Agent Card provider field (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "agent_provider_url" {
+  description = "Organization URL for Agent Card provider field (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "agent_docs_url" {
+  description = "Documentation URL shown in Agent Card (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "agent_icon_url" {
+  description = "Icon URL shown in Agent Card (optional)"
+  type        = string
+  default     = ""
+}
