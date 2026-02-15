@@ -11,6 +11,10 @@ export interface Config {
   agentUrl: string;
   port: number;
   pinataJwt?: string;
+  agentProviderName?: string;
+  agentProviderUrl?: string;
+  agentDocsUrl?: string;
+  agentIconUrl?: string;
 }
 
 function required(name: string): string {
@@ -49,5 +53,9 @@ export async function loadConfig(): Promise<Config> {
     agentUrl: process.env.AGENT_URL ?? "http://localhost:3000",
     port: parseInt(process.env.PORT ?? "3000", 10),
     pinataJwt: process.env.PINATA_JWT,
+    agentProviderName: process.env.AGENT_PROVIDER_NAME,
+    agentProviderUrl: process.env.AGENT_PROVIDER_URL,
+    agentDocsUrl: process.env.AGENT_DOCS_URL,
+    agentIconUrl: process.env.AGENT_ICON_URL,
   };
 }

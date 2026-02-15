@@ -2,7 +2,7 @@ import type { AgentCard, AgentSkill } from "@a2a-js/sdk";
 import type { Config } from "../config.js";
 
 export function buildAgentCard(config: Config, skills: AgentSkill[]): AgentCard {
-  return {
+  const card: AgentCard = {
     name: config.agentName,
     description: config.agentDescription,
     url: `${config.agentUrl}/a2a`,
@@ -23,4 +23,15 @@ export function buildAgentCard(config: Config, skills: AgentSkill[]): AgentCard 
     defaultInputModes: ["text"],
     defaultOutputModes: ["text"],
   };
+
+  if (config.agentProviderName && config.agentProviderUrl) {
+    card.provider = {
+      organization: config.agentProviderName,
+      url: config.agentProviderUrl,
+    };
+  }
+  if (config.agentDocsUrl) card.documentationUrl = config.agentDocsUrl;
+  if (config.agentIconUrl) card.iconUrl = config.agentIconUrl;
+
+  return card;
 }

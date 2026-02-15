@@ -35,7 +35,41 @@ describe("Hono app routes", () => {
 
   it("GET /api/hello without payment returns 402", async () => {
     const res = await app.request("/api/hello");
-    // x402 middleware should return 402 Payment Required
     expect(res.status).toBe(402);
+  });
+
+  it("POST /a2a message/send without payment returns 402", async () => {
+    const res = await app.request("/a2a", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "1",
+        method: "message/send",
+        params: {
+          message: {
+            kind: "message",
+            messageId: "test",
+            role: "user",
+            parts: [{ kind: "text", text: "hi" }],
+          },
+        },
+      }),
+    });
+    expect(res.status).toBe(402);
+  });
+
+  it("POST /a2a tasks/get does not require payment", async () => {
+    const res = await app.request("/a2a", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "2",
+        method: "tasks/get",
+        params: { id: "nonexistent" },
+      }),
+    });
+    expect(res.status).not.toBe(402);
   });
 });
