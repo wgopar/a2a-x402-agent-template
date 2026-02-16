@@ -14,10 +14,16 @@ rpc_url = "https://sepolia.base.org"
 # network = "eip155:8453"
 # rpc_url = "https://mainnet.base.org"
 
+# ─── Agent Card (optional) ─────────────────────────────────────────
+# agent_provider_name = ""
+# agent_provider_url  = ""
+# agent_docs_url      = ""
+# agent_icon_url      = ""
+
 # ─── Optional ──────────────────────────────────────────────────────
 # aws_region        = "us-east-1"
 # function_name     = "a2a-agent"
 # memory_size       = 256
 # agent_name        = "Hello Agent"
 # agent_description = "A simple Hello World agent"
-# facilitator_url   = "https://x402.org/facilitator"
+# facilitator_url   = "https://www.x402.org/facilitator"

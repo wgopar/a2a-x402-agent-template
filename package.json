@@ -2,6 +2,22 @@
   "name": "a2a-x402-agent-template",
   "version": "0.1.0",
   "description": "AI agent template with x402 payments, ERC-8004 identity, and A2A protocol",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wgopar/a2a-x402-agent-template.git"
+  },
+  "homepage": "https://github.com/wgopar/a2a-x402-agent-template#readme",
+  "keywords": [
+    "a2a",
+    "x402",
+    "erc-8004",
+    "agent",
+    "hono",
+    "payments",
+    "web3",
+    "lambda"
+  ],
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
