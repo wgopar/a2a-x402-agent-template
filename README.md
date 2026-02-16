@@ -314,20 +314,20 @@ Files marked with **★** are the ones you customize.
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `WALLET_ADDRESS` | Yes | — | Ethereum wallet address |
-| `PRIVATE_KEY` | Yes | — | Private key for signing (local dev only) |
-| `PRIVATE_KEY_SECRET_ARN` | — | — | AWS Secrets Manager ARN (Lambda only, overrides `PRIVATE_KEY`) |
-| `NETWORK` | — | `eip155:84532` | Chain identifier (Base Sepolia) |
-| `RPC_URL` | — | `https://sepolia.base.org` | JSON-RPC endpoint |
-| `FACILITATOR_URL` | — | `https://www.x402.org/facilitator` | x402 facilitator URL |
-| `AGENT_NAME` | — | `Hello Agent` | Agent display name |
-| `AGENT_DESCRIPTION` | — | `A simple Hello World agent` | Agent description |
-| `AGENT_URL` | — | `http://localhost:3000` | Public URL (set to Function URL for Lambda) |
-| `PORT` | — | `3000` | Local dev server port |
-| `PINATA_JWT` | — | — | Pinata API JWT (required for ERC-8004 registration) |
-| `AGENT_PROVIDER_NAME` | — | — | Provider org name (requires `AGENT_PROVIDER_URL` too) |
-| `AGENT_PROVIDER_URL` | — | — | Provider org URL |
-| `AGENT_DOCS_URL` | — | — | Documentation URL (shown in agent card) |
-| `AGENT_ICON_URL` | — | — | Icon URL (shown in agent card) |
+| `PRIVATE_KEY` | Yes (local dev) | — | Private key for signing. Not needed on Lambda if `PRIVATE_KEY_SECRET_ARN` is set. |
+| `PRIVATE_KEY_SECRET_ARN` | Yes (Lambda) | — | AWS Secrets Manager ARN. Lambda uses this instead of `PRIVATE_KEY`. |
+| `NETWORK` | No | `eip155:84532` | Chain identifier (Base Sepolia) |
+| `RPC_URL` | No | `https://sepolia.base.org` | JSON-RPC endpoint |
+| `FACILITATOR_URL` | No | `https://www.x402.org/facilitator` | x402 facilitator URL (testnet) |
+| `AGENT_NAME` | No | `Hello Agent` | Agent display name (shown in agent card) |
+| `AGENT_DESCRIPTION` | No | `A simple Hello World agent` | Agent description (shown in agent card) |
+| `AGENT_URL` | No | `http://localhost:3000` | Public URL. Set to Function URL when deploying to Lambda. |
+| `PORT` | No | `3000` | Local dev server port |
+| `PINATA_JWT` | For registration | — | Pinata API JWT. Required only for `npm run register` (ERC-8004). |
+| `AGENT_PROVIDER_NAME` | No | — | Provider org name. Requires `AGENT_PROVIDER_URL` to also be set. |
+| `AGENT_PROVIDER_URL` | No | — | Provider org URL |
+| `AGENT_DOCS_URL` | No | — | Documentation URL (shown in agent card) |
+| `AGENT_ICON_URL` | No | — | Icon URL (shown in agent card) |
 
 ## Network Switching
 
