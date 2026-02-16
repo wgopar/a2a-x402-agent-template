@@ -67,7 +67,7 @@ npm install
 npm run create-wallet -- my-agent
 ```
 
-This generates a new Ethereum wallet and writes the address + private key to both `.env` (local dev) and `infra/terraform.tfvars` (Lambda deploy). Both files are gitignored.
+This generates a new Ethereum wallet and writes the address + private key to both `.env` (local dev) and `infra/terraform.tfvars` (Lambda deploy). It also sets `function_name` in tfvars, which names all AWS resources (Lambda, ECR, IAM roles). **Use a unique name per agent** to prevent resource collisions. Both files are gitignored.
 
 > **Next:** Fund the wallet with testnet ETH from a [Base Sepolia faucet](https://www.coinbase.com/faucets/base-ethereum-goerli-faucet).
 
@@ -113,6 +113,8 @@ The `/api/hello` response includes a `402 Payment Required` status with an `x-pa
 ## Deploy to AWS Lambda
 
 ### First-time setup
+
+Make sure you've run `npm run create-wallet -- <name>` first — it sets `function_name` in `terraform.tfvars`, which is **required** and names all AWS resources.
 
 ```bash
 cd infra && terraform init
@@ -293,7 +295,7 @@ New routes under `/api/*` are automatically payment-gated. Update the price in `
 │   └── identity/
 │       └── erc8004.ts      # ERC-8004 registration (agent0-sdk)
 ├── scripts/
-│   ├── create-wallet.ts    # Generate wallet → .env + terraform.tfvars
+│   ├── create-wallet.ts    # Generate wallet + set function_name → .env + terraform.tfvars
 │   ├── register-identity.ts# Register on-chain identity
 │   └── deploy.sh           # Build + push + terraform apply
 ├── infra/

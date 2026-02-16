@@ -2,6 +2,7 @@
 #   cp terraform.tfvars.example terraform.tfvars
 
 # ─── Required ──────────────────────────────────────────────────────
+function_name  = ""   # Unique name for this agent (e.g. "my-agent")
 wallet_address = ""   # Your Ethereum wallet (e.g. "0x1234...")
 private_key    = ""   # Private key for signing (e.g. "0xabcd...")
 
@@ -22,7 +23,6 @@ rpc_url = "https://sepolia.base.org"
 
 # ─── Optional ──────────────────────────────────────────────────────
 # aws_region        = "us-east-1"
-# function_name     = "a2a-agent"
 # memory_size       = 256
 # agent_name        = "Hello Agent"
 # agent_description = "A simple Hello World agent"

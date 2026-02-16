@@ -16,6 +16,7 @@ function readWithFallback(primary: string, fallback: string): string {
 
 const tfvarsPath = resolve(projectDir, "infra/terraform.tfvars");
 const tfvars = readWithFallback(tfvarsPath, resolve(projectDir, "infra/terraform.tfvars.example"))
+  .replace(/^function_name\s*=\s*"[^"]*".*/m, `function_name  = "${agentName}"`)
   .replace(/^wallet_address\s*=\s*"[^"]*".*/m, `wallet_address = "${account.address}"`)
   .replace(/^private_key\s*=\s*"[^"]*".*/m, `private_key    = "${privateKey}"`);
 writeFileSync(tfvarsPath, tfvars);

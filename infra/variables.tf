@@ -7,9 +7,9 @@ variable "aws_region" {
 }
 
 variable "function_name" {
-  description = "Name for the Lambda function and ECR repository"
+  description = "Unique name for this agent (used for Lambda, ECR, IAM, and all AWS resources)"
   type        = string
-  default     = "a2a-agent"
+  # No default — must be unique per agent to prevent resource collisions
 }
 
 variable "memory_size" {

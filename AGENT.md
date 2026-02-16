@@ -11,7 +11,7 @@ Instructions for AI coding agents working on this codebase.
 | `npm run build` | Compile TypeScript |
 | `npm run lint` | Typecheck (`tsc --noEmit`) |
 | `npm run deploy` | Build Docker image, push to ECR, terraform apply |
-| `npm run create-wallet` | Generate Ethereum wallet → `.env` + `terraform.tfvars` |
+| `npm run create-wallet -- <name>` | Generate wallet + set `function_name` → `.env` + `terraform.tfvars` |
 | `npm run register` | Register ERC-8004 on-chain identity |
 | `npm run build:lambda` | Build Lambda Docker image locally |
 
@@ -143,6 +143,8 @@ Build targets:
 Lambda uses a CJS bundle (not ESM) for compatibility with the Lambda runtime. `@aws-sdk/*` packages are externalized (provided by the Lambda runtime).
 
 ### Terraform Resources
+
+All AWS resources are named using `var.function_name` (required, no default). The `create-wallet` script sets this automatically. Each agent deployment must use a unique name to avoid resource collisions.
 
 The `infra/` directory manages:
 - ECR repository
