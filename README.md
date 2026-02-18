@@ -150,7 +150,7 @@ curl https://<your-function-url>/.well-known/agent-card.json
 
 ## Register On-Chain Identity (Optional)
 
-ERC-8004 registration mints an NFT that points to your agent's live endpoint via IPFS metadata. This enables on-chain agent discovery.
+ERC-8004 registration mints an NFT that points to your agent's live endpoint via IPFS metadata. This enables on-chain agent discovery. If `assets/icon.png` exists, it's automatically uploaded to IPFS and included in the metadata.
 
 ### 1. Get a Pinata JWT
 
@@ -168,7 +168,11 @@ Point `AGENT_URL` in `.env` to your deployed Lambda Function URL (not localhost)
 AGENT_URL=https://<your-function-url>
 ```
 
-### 3. Register
+### 3. Add an icon (optional)
+
+Place a PNG image at `assets/icon.png`. It will be uploaded to IPFS and included in the on-chain metadata automatically. To use a different path, set `AGENT_IMAGE_PATH` in `.env`.
+
+### 4. Register
 
 ```bash
 npm run register
@@ -176,12 +180,13 @@ npm run register
 
 ```mermaid
 flowchart LR
-    Meta["Build metadata<br/>(name, skills, endpoint)"] --> IPFS["Upload to IPFS<br/>(via Pinata)"]
+    Icon["Upload icon<br/>(assets/icon.png)"] --> Meta["Build metadata<br/>(name, skills, endpoint, image)"]
+    Meta --> IPFS["Upload to IPFS<br/>(via Pinata)"]
     IPFS --> Mint["Mint ERC-8004 NFT<br/>(on-chain)"]
     Mint --> URI["Set token URI<br/>(ipfs://...)"]
 ```
 
-### 4. Verify
+### 5. Verify
 
 Anyone can now discover your agent on-chain:
 
@@ -303,6 +308,8 @@ New routes under `/api/*` are automatically payment-gated. Update the price in `
 │   ├── variables.tf        # Terraform variable definitions
 │   ├── outputs.tf          # Terraform outputs (function URL, etc.)
 │   └── terraform.tfvars.example
+├── assets/
+│   └── icon.png            # Agent icon (uploaded to IPFS during registration)
 ├── test/                   # Vitest tests
 ├── .env.example            # Environment template
 ├── Dockerfile              # Multi-stage (lambda default, server for ECS)
@@ -326,6 +333,7 @@ Files marked with **★** are the ones you customize.
 | `AGENT_URL` | No | `http://localhost:3000` | Public URL. Set to Function URL when deploying to Lambda. |
 | `PORT` | No | `3000` | Local dev server port |
 | `PINATA_JWT` | For registration | — | Pinata API JWT. Required only for `npm run register` (ERC-8004). |
+| `AGENT_IMAGE_PATH` | No | `assets/icon.png` | Path to agent icon. Uploaded to IPFS during registration if present. |
 | `AGENT_PROVIDER_NAME` | No | — | Provider org name. Requires `AGENT_PROVIDER_URL` to also be set. |
 | `AGENT_PROVIDER_URL` | No | — | Provider org URL |
 | `AGENT_DOCS_URL` | No | — | Documentation URL (shown in agent card) |

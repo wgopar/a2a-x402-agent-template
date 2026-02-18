@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { basename } from "node:path";
 import { SDK } from "agent0-sdk";
 import type { Config } from "../config.js";
 
@@ -5,6 +7,7 @@ export interface RegistrationResult {
   agentId: string;
   txHash: string;
   agentURI?: string;
+  imageCID?: string;
 }
 
 export type RegistryAddresses = Record<string, string>;
@@ -15,9 +18,38 @@ const REGISTRY_ADDRESSES: Record<number, RegistryAddresses> = {
   8453: { IDENTITY: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" }, // Base Mainnet
 };
 
+async function uploadImageToPinata(
+  imagePath: string,
+  pinataJwt: string,
+): Promise<string> {
+  const imageData = readFileSync(imagePath);
+  const blob = new Blob([imageData], { type: "image/png" });
+  const formData = new FormData();
+  formData.append("file", blob, basename(imagePath));
+  formData.append("network", "public");
+
+  const response = await fetch("https://uploads.pinata.cloud/v3/files", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${pinataJwt}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to upload image to Pinata: HTTP ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  const cid = result?.data?.cid || result?.cid || result?.IpfsHash;
+  if (!cid) {
+    throw new Error(`No CID returned from Pinata. Response: ${JSON.stringify(result)}`);
+  }
+  return cid;
+}
+
 export async function registerAgent(
   config: Config,
-  opts?: { registryAddresses?: RegistryAddresses },
+  opts?: { registryAddresses?: RegistryAddresses; imagePath?: string },
 ): Promise<RegistrationResult> {
   const chainId = parseInt(config.network.split(":")[1], 10);
 
@@ -45,6 +77,13 @@ export async function registerAgent(
   // Flag x402 payment support
   agent.setX402Support(true);
 
+  // Upload image to IPFS and set on agent metadata (before registerIPFS serializes it)
+  let imageCID: string | undefined;
+  if (opts?.imagePath && config.pinataJwt) {
+    imageCID = await uploadImageToPinata(opts.imagePath, config.pinataJwt);
+    agent.updateInfo(undefined, undefined, `ipfs://${imageCID}`);
+  }
+
   // Publish to IPFS and register on-chain (step 1: mint token)
   const txHandle = await agent.registerIPFS();
 
@@ -55,5 +94,6 @@ export async function registerAgent(
     agentId: agent.agentId ?? "pending",
     txHash: txHandle.hash,
     agentURI: result?.agentURI,
+    imageCID,
   };
 }
