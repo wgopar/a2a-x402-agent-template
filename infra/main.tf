@@ -106,15 +106,18 @@ locals {
       PRIVATE_KEY_SECRET_ARN = aws_secretsmanager_secret.private_key.arn
       NETWORK                = var.network
       RPC_URL                = var.rpc_url
-      FACILITATOR_URL        = var.facilitator_url
       AGENT_NAME             = var.agent_name
       AGENT_DESCRIPTION      = var.agent_description
-      AGENT_URL              = "pending"
+      AGENT_URL              = var.public_agent_url != "" ? var.public_agent_url : "pending"
+      BYPASS_PAYMENTS        = tostring(var.bypass_payments)
     },
-    var.agent_provider_name != "" ? { AGENT_PROVIDER_NAME = var.agent_provider_name } : {},
-    var.agent_provider_url  != "" ? { AGENT_PROVIDER_URL  = var.agent_provider_url }  : {},
-    var.agent_docs_url      != "" ? { AGENT_DOCS_URL      = var.agent_docs_url }      : {},
-    var.agent_icon_url      != "" ? { AGENT_ICON_URL      = var.agent_icon_url }      : {},
+    var.agent_id > 0              ? { AGENT_ID              = tostring(var.agent_id) }   : {},
+    var.cdp_api_key_id     != ""  ? { CDP_API_KEY_ID        = var.cdp_api_key_id }       : {},
+    var.cdp_api_key_secret != ""  ? { CDP_API_KEY_SECRET    = var.cdp_api_key_secret }   : {},
+    var.agent_provider_name != "" ? { AGENT_PROVIDER_NAME   = var.agent_provider_name }  : {},
+    var.agent_provider_url  != "" ? { AGENT_PROVIDER_URL    = var.agent_provider_url }   : {},
+    var.agent_docs_url      != "" ? { AGENT_DOCS_URL        = var.agent_docs_url }       : {},
+    var.agent_icon_url      != "" ? { AGENT_ICON_URL        = var.agent_icon_url }       : {},
   )
 }
 
@@ -154,7 +157,10 @@ resource "aws_lambda_permission" "function_invoke_public" {
 # Lambda needs AGENT_URL for the A2A agent card, but the Function URL
 # doesn't exist until after Lambda is created. We create Lambda with
 # AGENT_URL="pending", then inject the real URL via AWS CLI.
+# Skipped when public_agent_url is set (no need to auto-detect).
 resource "terraform_data" "inject_agent_url" {
+  count = var.public_agent_url == "" ? 1 : 0
+
   triggers_replace = [
     aws_lambda_function_url.agent.function_url,
     var.image_tag,

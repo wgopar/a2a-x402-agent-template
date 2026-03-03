@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { Message } from "@a2a-js/sdk";
+import type { Task, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import type {
   AgentExecutor,
   RequestContext,
@@ -12,15 +12,34 @@ export class HelloExecutor implements AgentExecutor {
     requestContext: RequestContext,
     eventBus: ExecutionEventBus,
   ): Promise<void> {
-    const response: Message = {
-      kind: "message",
-      messageId: uuidv4(),
-      role: "agent",
-      parts: [{ kind: "text", text: "Hello, World!" }],
+    const task: Task = {
+      kind: "task",
+      id: requestContext.taskId,
       contextId: requestContext.contextId,
+      status: {
+        state: "completed",
+        message: {
+          kind: "message",
+          messageId: uuidv4(),
+          role: "agent",
+          parts: [{ kind: "text", text: "Hello, World!" }],
+          contextId: requestContext.contextId,
+        },
+        timestamp: new Date().toISOString(),
+      },
     };
 
-    eventBus.publish(response);
+    eventBus.publish(task);
+
+    const statusEvent: TaskStatusUpdateEvent = {
+      kind: "status-update",
+      taskId: requestContext.taskId,
+      contextId: requestContext.contextId,
+      status: task.status,
+      final: true,
+    };
+
+    eventBus.publish(statusEvent);
     eventBus.finished();
   }
 

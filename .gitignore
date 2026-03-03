@@ -19,3 +19,4 @@ infra/.terraform/
 infra/*.tfstate*
 infra/.terraform.lock.hcl
 infra/terraform.tfvars
+bun.lock

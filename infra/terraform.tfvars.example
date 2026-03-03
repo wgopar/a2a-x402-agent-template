@@ -15,6 +15,15 @@ rpc_url = "https://sepolia.base.org"
 # network = "eip155:8453"
 # rpc_url = "https://mainnet.base.org"
 
+# ─── Payments (CDP) ──────────────────────────────────────────────
+# cdp_api_key_id     = ""
+# cdp_api_key_secret = ""
+# bypass_payments    = false
+
+# ─── Identity ────────────────────────────────────────────────────
+# agent_id         = 0     # Set after first registration
+# public_agent_url = ""    # Override auto-detected Lambda URL
+
 # ─── Agent Card (optional) ─────────────────────────────────────────
 # agent_provider_name = ""
 # agent_provider_url  = ""
@@ -26,4 +35,3 @@ rpc_url = "https://sepolia.base.org"
 # memory_size       = 256
 # agent_name        = "Hello Agent"
 # agent_description = "A simple Hello World agent"
-# facilitator_url   = "https://www.x402.org/facilitator"

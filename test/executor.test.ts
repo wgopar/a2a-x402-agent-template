@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { HelloExecutor } from "../src/agent/executor.js";
 import type { RequestContext, ExecutionEventBus } from "@a2a-js/sdk/server";
-import type { Message } from "@a2a-js/sdk";
+import type { Task, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 
 describe("HelloExecutor", () => {
   function mockEventBus() {
@@ -29,18 +29,25 @@ describe("HelloExecutor", () => {
     } as RequestContext;
   }
 
-  it("publishes a Hello World message", async () => {
+  it("publishes Task and TaskStatusUpdateEvent", async () => {
     const executor = new HelloExecutor();
     const eventBus = mockEventBus();
     const ctx = mockRequestContext();
 
     await executor.execute(ctx, eventBus);
 
-    expect(eventBus.publish).toHaveBeenCalledTimes(1);
-    const published = eventBus.publish.mock.calls[0][0] as Message;
-    expect(published.role).toBe("agent");
-    expect(published.parts[0]).toEqual({ kind: "text", text: "Hello, World!" });
-    expect(published.contextId).toBe("ctx-1");
+    expect(eventBus.publish).toHaveBeenCalledTimes(2);
+
+    const task = eventBus.publish.mock.calls[0][0] as Task;
+    expect(task.kind).toBe("task");
+    expect(task.id).toBe("task-1");
+    expect(task.status.state).toBe("completed");
+    expect(task.status.message?.parts[0]).toEqual({ kind: "text", text: "Hello, World!" });
+
+    const statusEvent = eventBus.publish.mock.calls[1][0] as TaskStatusUpdateEvent;
+    expect(statusEvent.kind).toBe("status-update");
+    expect(statusEvent.final).toBe(true);
+    expect(statusEvent.taskId).toBe("task-1");
   });
 
   it("calls finished after publishing", async () => {

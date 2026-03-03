@@ -38,6 +38,12 @@ variable "private_key" {
   sensitive   = true
 }
 
+variable "agent_id" {
+  description = "ERC-8004 agent ID (set after registration)"
+  type        = number
+  default     = 0
+}
+
 # ─── Network ───────────────────────────────────────────────────────
 
 variable "network" {
@@ -52,13 +58,35 @@ variable "rpc_url" {
   default     = "https://sepolia.base.org"
 }
 
-variable "facilitator_url" {
-  description = "x402 facilitator service URL for payment verification"
+# ─── Payments ─────────────────────────────────────────────────────
+
+variable "cdp_api_key_id" {
+  description = "CDP API key ID for x402 facilitator authentication"
   type        = string
-  default     = "https://www.x402.org/facilitator"
+  sensitive   = true
+  default     = ""
+}
+
+variable "cdp_api_key_secret" {
+  description = "CDP API key secret for x402 facilitator authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "bypass_payments" {
+  description = "Skip x402 payment enforcement (never true in production)"
+  type        = bool
+  default     = false
 }
 
 # ─── Agent Metadata ────────────────────────────────────────────────
+
+variable "public_agent_url" {
+  description = "Public URL for the agent (overrides auto-detected Lambda Function URL)"
+  type        = string
+  default     = ""
+}
 
 variable "agent_name" {
   description = "Human-readable agent name (shown in A2A agent card)"

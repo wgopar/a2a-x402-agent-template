@@ -5,7 +5,6 @@ export interface Config {
   privateKey: string;
   network: string;
   rpcUrl: string;
-  facilitatorUrl: string;
   agentName: string;
   agentDescription: string;
   agentUrl: string;
@@ -15,6 +14,10 @@ export interface Config {
   agentProviderUrl?: string;
   agentDocsUrl?: string;
   agentIconUrl?: string;
+  agentId?: number;
+  cdpApiKeyId?: string;
+  cdpApiKeySecret?: string;
+  bypassPayments: boolean;
 }
 
 function required(name: string): string {
@@ -42,12 +45,18 @@ async function resolvePrivateKey(): Promise<string> {
 }
 
 export async function loadConfig(): Promise<Config> {
+  const bypassPayments = process.env.BYPASS_PAYMENTS === "true";
+  if (bypassPayments && process.env.NODE_ENV === "production") {
+    throw new Error("BYPASS_PAYMENTS=true is not allowed in production");
+  }
+
+  const agentIdRaw = process.env.AGENT_ID;
+
   return {
     walletAddress: required("WALLET_ADDRESS"),
     privateKey: await resolvePrivateKey(),
     network: process.env.NETWORK ?? "eip155:84532",
     rpcUrl: process.env.RPC_URL ?? "https://sepolia.base.org",
-    facilitatorUrl: process.env.FACILITATOR_URL ?? "https://www.x402.org/facilitator",
     agentName: process.env.AGENT_NAME ?? "Hello Agent",
     agentDescription: process.env.AGENT_DESCRIPTION ?? "A simple Hello World agent",
     agentUrl: process.env.AGENT_URL ?? "http://localhost:3000",
@@ -57,5 +66,9 @@ export async function loadConfig(): Promise<Config> {
     agentProviderUrl: process.env.AGENT_PROVIDER_URL,
     agentDocsUrl: process.env.AGENT_DOCS_URL,
     agentIconUrl: process.env.AGENT_ICON_URL,
+    agentId: agentIdRaw ? parseInt(agentIdRaw, 10) : undefined,
+    cdpApiKeyId: process.env.CDP_API_KEY_ID,
+    cdpApiKeySecret: process.env.CDP_API_KEY_SECRET,
+    bypassPayments,
   };
 }
