@@ -22,7 +22,7 @@ flowchart LR
     end
 
     subgraph Hono["Hono App"]
-        Free["/health<br/>/.well-known/agent-card.json"]
+        Free["/health<br/>/.well-known/agent-card.json<br/>/.well-known/agent-registration.json"]
         Paid["/api/* &ensp; /a2a"]
     end
 
@@ -39,9 +39,10 @@ Terraform manages all AWS infrastructure: Lambda function, ECR image repository,
 | Library | Package | What it does |
 |---------|---------|-------------|
 | **[Hono](https://hono.dev)** | `hono` | Ultrafast web framework. Runs on Node.js, AWS Lambda, Deno, Bun, Cloudflare Workers — same code everywhere. |
-| **[x402](https://www.x402.org)** | `@x402/hono` `@x402/core` `@x402/evm` | HTTP 402 payment protocol. Clients pay with on-chain USDC, a facilitator verifies payment, your agent gets paid. |
+| **[x402](https://www.x402.org)** | `@x402/hono` `@x402/core` `@x402/evm` `@coinbase/x402` | HTTP 402 payment protocol. Uses Coinbase CDP facilitator for payment verification and settlement. |
 | **[A2A](https://google.github.io/A2A/)** | `@a2a-js/sdk` | Google's Agent-to-Agent protocol. Standardized JSON-RPC interface so agents can discover and talk to each other. |
-| **[ERC-8004](https://eips.ethereum.org/EIPS/eip-8004)** | `agent0-sdk` | On-chain agent identity. Mints an NFT with IPFS metadata pointing to your agent's live endpoint. |
+| **[ERC-8004](https://eips.ethereum.org/EIPS/eip-8004)** | `agent0-sdk` `erc-8004-js` | On-chain agent identity. Mints an NFT with IPFS metadata pointing to your agent's live endpoint. Supports update-or-create registration flow. |
+| **[Zod](https://zod.dev)** | `zod` | TypeScript-first schema validation. Used to validate API route inputs. |
 
 ## Prerequisites
 
@@ -81,10 +82,14 @@ WALLET_ADDRESS=0x...          # from create-wallet
 PRIVATE_KEY=0x...             # from create-wallet
 NETWORK=eip155:84532          # Base Sepolia (testnet)
 RPC_URL=https://sepolia.base.org
-FACILITATOR_URL=https://www.x402.org/facilitator
+BYPASS_PAYMENTS=true          # skip x402 for local dev (auto-disabled in production)
 AGENT_NAME=Hello Agent
 AGENT_URL=http://localhost:3000
 PORT=3000
+
+# CDP Facilitator (required when BYPASS_PAYMENTS=false)
+CDP_API_KEY_ID=your-cdp-key-id
+CDP_API_KEY_SECRET=your-cdp-key-secret
 ```
 
 See [Configuration Reference](#configuration-reference) for all available variables.
@@ -101,14 +106,17 @@ npm run dev
 # Health check (always free)
 curl http://localhost:3000/health
 
-# Agent card (always free)
+# Agent card with structured entrypoints (always free)
 curl http://localhost:3000/.well-known/agent-card.json
 
-# Paid endpoint — returns 402 with payment terms
-curl -i http://localhost:3000/api/hello
+# Agent registration linkage (always free)
+curl http://localhost:3000/.well-known/agent-registration.json
+
+# API endpoint — returns 200 with BYPASS_PAYMENTS=true, or 402 with payment terms
+curl http://localhost:3000/api/hello
 ```
 
-The `/api/hello` response includes a `402 Payment Required` status with an `x-payment-required` header containing the payment terms (price, network, asset, payTo address).
+With `BYPASS_PAYMENTS=true` (default for local dev), all endpoints return responses directly. When payments are enabled, unpaid requests return `402 Payment Required` with payment terms in the `x-payment-required` header.
 
 ## Deploy to AWS Lambda
 
@@ -152,6 +160,8 @@ curl https://<your-function-url>/.well-known/agent-card.json
 
 ERC-8004 registration mints an NFT that points to your agent's live endpoint via IPFS metadata. This enables on-chain agent discovery. If `assets/icon.png` exists, it's automatically uploaded to IPFS and included in the metadata.
 
+The register script uses an **update-or-create** flow: it auto-detects if the wallet already owns an agent on the registry and updates its metadata instead of minting a new token. You can also set `AGENT_ID` in `.env` to target a specific token.
+
 ### 1. Get a Pinata JWT
 
 Sign up at [pinata.cloud](https://www.pinata.cloud), create an API key, and add the JWT to `.env`:
@@ -182,8 +192,9 @@ npm run register
 flowchart LR
     Icon["Upload icon<br/>(assets/icon.png)"] --> Meta["Build metadata<br/>(name, skills, endpoint, image)"]
     Meta --> IPFS["Upload to IPFS<br/>(via Pinata)"]
-    IPFS --> Mint["Mint ERC-8004 NFT<br/>(on-chain)"]
-    Mint --> URI["Set token URI<br/>(ipfs://...)"]
+    IPFS --> Check{"Agent exists?"}
+    Check -->|No| Mint["Mint ERC-8004 NFT<br/>(on-chain)"]
+    Check -->|Yes| Update["Update token URI<br/>(on-chain)"]
 ```
 
 ### 5. Verify
@@ -222,9 +233,11 @@ sequenceDiagram
 |----------|---------|
 | `GET /health` | Free |
 | `GET /.well-known/agent-card.json` | Free |
+| `GET /.well-known/agent-registration.json` | Free |
 | `POST /a2a` — `tasks/get`, `tasks/cancel` | Free |
 | `POST /a2a` — `message/send`, `message/stream` | **$0.01 USDC** |
 | `GET /api/hello` | **$0.01 USDC** |
+| `POST /api/hello` | **$0.01 USDC** |
 
 Read-only A2A methods are always free. Only work-producing methods (`message/send`, `message/stream`) require payment.
 
@@ -255,14 +268,29 @@ export class MyExecutor implements AgentExecutor {
     eventBus: ExecutionEventBus,
   ): Promise<void> {
     // Your agent logic here
-    const response: Message = {
-      kind: "message",
-      messageId: uuidv4(),
-      role: "agent",
-      parts: [{ kind: "text", text: "Your response" }],
+    const task: Task = {
+      kind: "task",
+      id: requestContext.taskId,
       contextId: requestContext.contextId,
+      status: {
+        state: "completed",
+        message: {
+          kind: "message",
+          messageId: uuidv4(),
+          role: "agent",
+          parts: [{ kind: "text", text: "Your response" }],
+          contextId: requestContext.contextId,
+        },
+      },
     };
-    eventBus.publish(response);
+    eventBus.publish(task);
+    eventBus.publish({
+      kind: "status-update",
+      taskId: requestContext.taskId,
+      contextId: requestContext.contextId,
+      status: task.status,
+      final: true,
+    });
     eventBus.finished();
   }
 }
@@ -288,6 +316,7 @@ New routes under `/api/*` are automatically payment-gated. Update the price in `
 │   ├── lambda.ts           # AWS Lambda entrypoint (lazy init)
 │   ├── agent/
 │   │   ├── card.ts         # AgentCard builder
+│   │   ├── entrypoints.ts  # ★ Structured entrypoints (customize this)
 │   │   ├── executor.ts     # ★ Task execution logic (customize this)
 │   │   └── skills.ts       # ★ Skill definitions (customize this)
 │   ├── a2a/
@@ -327,11 +356,14 @@ Files marked with **★** are the ones you customize.
 | `PRIVATE_KEY_SECRET_ARN` | Yes (Lambda) | — | AWS Secrets Manager ARN. Lambda uses this instead of `PRIVATE_KEY`. |
 | `NETWORK` | No | `eip155:84532` | Chain identifier (Base Sepolia) |
 | `RPC_URL` | No | `https://sepolia.base.org` | JSON-RPC endpoint |
-| `FACILITATOR_URL` | No | `https://www.x402.org/facilitator` | x402 facilitator URL (testnet) |
+| `CDP_API_KEY_ID` | When payments enabled | — | CDP API key ID for x402 facilitator authentication |
+| `CDP_API_KEY_SECRET` | When payments enabled | — | CDP API key secret for x402 facilitator authentication |
+| `BYPASS_PAYMENTS` | No | `false` | Skip x402 payment enforcement. Throws if `true` in production (`NODE_ENV=production`). |
 | `AGENT_NAME` | No | `Hello Agent` | Agent display name (shown in agent card) |
 | `AGENT_DESCRIPTION` | No | `A simple Hello World agent` | Agent description (shown in agent card) |
 | `AGENT_URL` | No | `http://localhost:3000` | Public URL. Set to Function URL when deploying to Lambda. |
 | `PORT` | No | `3000` | Local dev server port |
+| `AGENT_ID` | No | — | ERC-8004 agent token ID. Set after first registration. Used by register script for updates. |
 | `PINATA_JWT` | For registration | — | Pinata API JWT. Required only for `npm run register` (ERC-8004). |
 | `AGENT_IMAGE_PATH` | No | `assets/icon.png` | Path to agent icon. Uploaded to IPFS during registration if present. |
 | `AGENT_PROVIDER_NAME` | No | — | Provider org name. Requires `AGENT_PROVIDER_URL` to also be set. |
@@ -347,7 +379,8 @@ The same wallet works on both testnet and mainnet. Switch by editing `.env` and 
 |---|---|---|
 | `NETWORK` | `eip155:84532` | `eip155:8453` |
 | `RPC_URL` | `https://sepolia.base.org` | `https://mainnet.base.org` |
-| `FACILITATOR_URL` | `https://www.x402.org/facilitator` | `https://api.cdp.coinbase.com/platform/v2/x402` |
+
+The CDP facilitator (`@coinbase/x402`) handles both networks — no URL switching needed. Just set `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET`.
 
 After switching, redeploy (`npm run deploy`) and re-register identity (`npm run register`) on the new network.
 
@@ -358,7 +391,7 @@ npm test        # Run all tests
 npm run lint    # TypeScript type check
 ```
 
-Tests cover the app composition, agent card generation, executor behavior, config loading, and Lambda handler setup.
+25 tests cover app composition (including JSON-RPC error handling and Zod validation), agent card generation, executor event publishing, config loading (including bypass-payments safety), and Lambda handler setup.
 
 ## License
 
