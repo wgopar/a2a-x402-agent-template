@@ -13,6 +13,7 @@ dist/
 .claude/
 CLAUDE.md
 spec.md
+.worktrees/
 
 # Terraform
 infra/.terraform/
