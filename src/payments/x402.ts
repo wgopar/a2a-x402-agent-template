@@ -1,6 +1,7 @@
 import { paymentMiddleware, x402ResourceServer } from "@x402/hono";
 import type { Network } from "@x402/core/types";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { UptoEvmScheme } from "@x402/evm/upto/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { createFacilitatorConfig } from "@coinbase/x402";
 import type { Config } from "../config.js";
@@ -9,9 +10,14 @@ export interface RoutePrice {
   path: string;
   price: string;
   description: string;
+  scheme?: "exact" | "upto";
 }
 
-export function createPaymentMiddleware(config: Config, routes: RoutePrice[]) {
+export function createPaymentMiddleware(
+  config: Config,
+  routes: RoutePrice[],
+  options: { syncFacilitatorOnStart?: boolean } = {},
+) {
   if (!config.cdpApiKeyId || !config.cdpApiKeySecret) {
     throw new Error(
       "CDP_API_KEY_ID and CDP_API_KEY_SECRET are required for payment middleware",
@@ -27,10 +33,9 @@ export function createPaymentMiddleware(config: Config, routes: RoutePrice[]) {
   );
   const facilitatorClient = new HTTPFacilitatorClient(facilitatorConfig);
 
-  const resourceServer = new x402ResourceServer(facilitatorClient).register(
-    network,
-    new ExactEvmScheme(),
-  );
+  const resourceServer = new x402ResourceServer(facilitatorClient)
+    .register(network, new ExactEvmScheme())
+    .register(network, new UptoEvmScheme());
 
   const routeConfig: Record<
     string,
@@ -46,7 +51,7 @@ export function createPaymentMiddleware(config: Config, routes: RoutePrice[]) {
     const routePath = route.path.split(" ")[1]?.replace(/^\//, "") ?? "";
     routeConfig[route.path] = {
       accepts: {
-        scheme: "exact",
+        scheme: route.scheme ?? "exact",
         price: route.price,
         network,
         payTo: config.walletAddress,
@@ -57,5 +62,11 @@ export function createPaymentMiddleware(config: Config, routes: RoutePrice[]) {
     };
   }
 
-  return paymentMiddleware(routeConfig, resourceServer);
+  return paymentMiddleware(
+    routeConfig,
+    resourceServer,
+    undefined,
+    undefined,
+    options.syncFacilitatorOnStart ?? true,
+  );
 }

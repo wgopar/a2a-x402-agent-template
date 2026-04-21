@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createApp } from "../src/app.js";
+import { createPaymentMiddleware } from "../src/payments/x402.js";
 import type { Config } from "../src/config.js";
 
 const testConfig: Config = {
@@ -107,5 +108,42 @@ describe("Hono app routes", () => {
       }),
     });
     expect(res.status).not.toBe(402);
+  });
+});
+
+describe("createPaymentMiddleware — scheme registration", () => {
+  const cfgWithCdp: Config = {
+    ...testConfig,
+    bypassPayments: false,
+    cdpApiKeyId: "test-id",
+    cdpApiKeySecret: "test-secret",
+  };
+  const noSync = { syncFacilitatorOnStart: false };
+
+  it("accepts an exact-scheme route (default)", () => {
+    expect(() =>
+      createPaymentMiddleware(
+        cfgWithCdp,
+        [{ path: "GET /api/hello", price: "$0.01", description: "Hello" }],
+        noSync,
+      ),
+    ).not.toThrow();
+  });
+
+  it("accepts an upto-scheme route", () => {
+    expect(() =>
+      createPaymentMiddleware(
+        cfgWithCdp,
+        [
+          {
+            path: "POST /api/llm",
+            scheme: "upto",
+            price: "$0.50",
+            description: "LLM inference, metered",
+          },
+        ],
+        noSync,
+      ),
+    ).not.toThrow();
   });
 });
