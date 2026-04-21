@@ -19,5 +19,12 @@ export function buildEntrypoints(baseUrl: string): Entrypoint[] {
       description: "Returns a Hello World greeting",
       pricing: { amount: "0.01", currency: "USDC", protocol: "x402" },
     },
+    {
+      id: "meter",
+      method: "POST",
+      url: `${base}/api/meter`,
+      description: "Metered compute demo priced via x402 upto",
+      pricing: { amount: "upTo:0.50", currency: "USDC", protocol: "x402" },
+    },
   ];
 }

@@ -13,6 +13,7 @@ const testConfig: Config = {
   agentUrl: "http://localhost:3000",
   port: 3000,
   bypassPayments: true,
+  meterMaxPricePerRequest: "$0.50",
 };
 
 describe("buildAgentCard", () => {
@@ -26,8 +27,8 @@ describe("buildAgentCard", () => {
 
   it("includes skills", () => {
     const card = buildAgentCard(testConfig, skills);
-    expect(card.skills).toHaveLength(1);
-    expect(card.skills[0].id).toBe("hello");
+    expect(card.skills).toHaveLength(2);
+    expect(card.skills.map((s) => s.id)).toEqual(["hello", "meter"]);
   });
 
   it("disables streaming for Lambda compatibility", () => {

@@ -16,4 +16,16 @@ export const skills: AgentSkill[] = [
       "Give me a welcome message",
     ],
   },
+  {
+    id: "meter",
+    name: "Meter",
+    description:
+      "Metered compute demo priced via the x402 `upto` scheme. The client pre-authorizes a per-request ceiling (METER_MAX_PRICE_PER_REQUEST) and is charged proportional to actual work at settlement. Replace the work function in src/routes/meter.ts with your real paid logic (LLM call, compute job, data fetch, etc.).",
+    tags: ["x402", "upto", "demo", "template", "metered"],
+    examples: [
+      "Process this text",
+      "Hash this input",
+      "Run the meter over a short message",
+    ],
+  },
 ];

@@ -13,6 +13,7 @@ const testConfig: Config = {
   agentUrl: "http://localhost:3000",
   port: 3000,
   bypassPayments: true,
+  meterMaxPricePerRequest: "$0.50",
 };
 
 describe("Hono app routes", () => {
@@ -30,7 +31,7 @@ describe("Hono app routes", () => {
     expect(res.status).toBe(200);
     const card = await res.json();
     expect(card.name).toBe("Test Agent");
-    expect(card.skills).toHaveLength(1);
+    expect(card.skills).toHaveLength(2);
     expect(card.url).toContain("/a2a");
     expect(card.entrypoints).toBeDefined();
     expect(card.entrypoints.length).toBeGreaterThan(0);
@@ -109,6 +110,46 @@ describe("Hono app routes", () => {
     });
     expect(res.status).not.toBe(402);
   });
+
+  it("POST /api/meter hashes input and reports bytes + charged units", async () => {
+    const res = await app.request("/api/meter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "hello world" }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.output).toBe(
+      "sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+    );
+    expect(body.bytesProcessed).toBe(11);
+    expect(body.chargedUnits).toBe("110");
+  });
+
+  it("POST /api/meter rejects empty body with 400", async () => {
+    const res = await app.request("/api/meter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("POST /api/meter rejects oversize input with 400", async () => {
+    const res = await app.request("/api/meter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "a".repeat(10_001) }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("agent card includes meter skill", async () => {
+    const res = await app.request("/.well-known/agent-card.json");
+    const card = await res.json();
+    const ids = card.skills.map((s: { id: string }) => s.id);
+    expect(ids).toContain("meter");
+  });
 });
 
 describe("createPaymentMiddleware — scheme registration", () => {
@@ -136,10 +177,10 @@ describe("createPaymentMiddleware — scheme registration", () => {
         cfgWithCdp,
         [
           {
-            path: "POST /api/llm",
+            path: "POST /api/meter",
             scheme: "upto",
             price: "$0.50",
-            description: "LLM inference, metered",
+            description: "Metered compute, priced via upto",
           },
         ],
         noSync,

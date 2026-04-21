@@ -18,6 +18,7 @@ export interface Config {
   cdpApiKeyId?: string;
   cdpApiKeySecret?: string;
   bypassPayments: boolean;
+  meterMaxPricePerRequest: string;
 }
 
 function required(name: string): string {
@@ -70,5 +71,6 @@ export async function loadConfig(): Promise<Config> {
     cdpApiKeyId: process.env.CDP_API_KEY_ID,
     cdpApiKeySecret: process.env.CDP_API_KEY_SECRET,
     bypassPayments,
+    meterMaxPricePerRequest: process.env.METER_MAX_PRICE_PER_REQUEST ?? "$0.50",
   };
 }

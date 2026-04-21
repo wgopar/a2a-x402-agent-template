@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { health } from "./routes/health.js";
-import { api } from "./routes/api.js";
+import { createApiRoutes } from "./routes/api.js";
 import { createPaymentMiddleware } from "./payments/x402.js";
 import { createA2ARoutes } from "./a2a/handler.js";
 import { buildAgentCard } from "./agent/card.js";
@@ -63,6 +63,12 @@ export function createApp(config: Config) {
           price: "$0.01",
           description: "A2A task execution",
         },
+        {
+          path: "POST /api/meter",
+          scheme: "upto",
+          price: config.meterMaxPricePerRequest,
+          description: "Metered compute demo — priced via x402 upto",
+        },
       ]);
 
   // A2A middleware: pre-parse JSON-RPC body and gate paid methods
@@ -105,7 +111,7 @@ export function createApp(config: Config) {
       walletAddress: config.walletAddress,
     }),
   );
-  app.route("/api", api);
+  app.route("/api", createApiRoutes(config));
 
   return app;
 }
