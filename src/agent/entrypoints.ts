@@ -26,5 +26,12 @@ export function buildEntrypoints(baseUrl: string): Entrypoint[] {
       description: "Metered compute demo priced via x402 upto",
       pricing: { amount: "upTo:0.50", currency: "USDC", protocol: "x402" },
     },
+    {
+      id: "mcp",
+      method: "POST",
+      url: `${base}/mcp`,
+      description:
+        "MCP Streamable HTTP endpoint. Tools: hello (exact $0.01), meter (upto $0.50).",
+    },
   ];
 }

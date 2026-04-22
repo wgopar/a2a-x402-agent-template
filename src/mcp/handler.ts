@@ -8,7 +8,7 @@ import type { Config } from "../config.js";
 // stateless-mode documented pattern.
 
 export function createMCPRoutes(config: Config) {
-  const app = new Hono();
+  const app = new Hono<{ Variables: { parsedBody?: unknown } }>();
 
   app.all("/mcp", async (c) => {
     const server = buildMCPServer({ c, config });
@@ -17,7 +17,13 @@ export function createMCPRoutes(config: Config) {
       enableJsonResponse: true,
     });
     await server.connect(transport);
-    return transport.handleRequest(c.req.raw);
+    // Upstream middleware may have pre-parsed the body (for gating). Pass it
+    // through so the transport doesn't try to read the already-consumed stream.
+    const parsedBody = c.get("parsedBody");
+    return transport.handleRequest(
+      c.req.raw,
+      parsedBody !== undefined ? { parsedBody } : undefined,
+    );
   });
 
   return app;

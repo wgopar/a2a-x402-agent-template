@@ -150,6 +150,57 @@ describe("Hono app routes", () => {
     const ids = card.skills.map((s: { id: string }) => s.id);
     expect(ids).toContain("meter");
   });
+
+  it("POST /mcp initialize works through the full app pipeline", async () => {
+    const res = await app.request("/mcp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-06-18",
+          capabilities: {},
+          clientInfo: { name: "integration", version: "1" },
+        },
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.result.serverInfo.name).toBe("a2a-x402-agent-template");
+  });
+
+  it("POST /mcp tools/call meter (bypass mode) returns hash", async () => {
+    const res = await app.request("/mcp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: { name: "meter", arguments: { message: "hello world" } },
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    const payload = JSON.parse(body.result.content[0].text);
+    expect(payload.bytesProcessed).toBe(11);
+    expect(payload.chargedUnits).toBe("110");
+  });
+
+  it("agent card entrypoints includes mcp", async () => {
+    const res = await app.request("/.well-known/agent-card.json");
+    const card = await res.json();
+    const ids = card.entrypoints.map((e: { id: string }) => e.id);
+    expect(ids).toContain("mcp");
+  });
 });
 
 describe("createPaymentMiddleware — scheme registration", () => {
