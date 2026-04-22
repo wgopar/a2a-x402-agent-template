@@ -6,7 +6,7 @@ import { createPaymentMiddleware } from "./payments/x402.js";
 import { createA2ARoutes } from "./a2a/handler.js";
 import { buildAgentCard } from "./agent/card.js";
 import { skills } from "./agent/skills.js";
-import { HelloExecutor } from "./agent/executor.js";
+import { SkillExecutor } from "./agent/executor.js";
 import { createMiddleware } from "hono/factory";
 import type { Config } from "./config.js";
 
@@ -102,7 +102,7 @@ export function createApp(config: Config) {
   }
 
   const agentCard = buildAgentCard(config, skills);
-  const executor = new HelloExecutor();
+  const executor = new SkillExecutor();
   app.route(
     "/",
     createA2ARoutes(agentCard, executor, {
